@@ -1,12 +1,53 @@
 /* =========================================================
    scanner.js — Quick Count Extruder Capacity
-   Logic kamera (html5-qrcode v2.3.8)
+   Logic kamera (html5-qrcode v2.3.8) + bunyi sukses scan.
    ========================================================= */
 
 const Scanner = (function () {
   let qrScanner = null;
   let isScanning = false;
+  let audioCtx = null;
 
+  /* ---------- AUDIO ---------- */
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  /**
+   * Bunyi sukses scan: square 1200 → 1800 Hz.
+   */
+  function beepSuksesScan() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = "square";
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.linearRampToValueAtTime(1800, now + 0.12);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.4, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.15);
+  }
+
+  /* ---------- SCANNER ---------- */
   /**
    * Mulai scanner kamera.
    * @param {string} elementId - id div target untuk video
@@ -22,7 +63,6 @@ const Scanner = (function () {
       return;
     }
 
-    // Bersihkan dulu jika ada instance lama
     if (qrScanner) {
       stop();
     }
@@ -43,7 +83,7 @@ const Scanner = (function () {
         { facingMode: "environment" },
         config,
         (decodedText) => {
-          // Sukses decode — hentikan scanner, kirim hasil
+          beepSuksesScan();
           if (onSuccess) onSuccess(decodedText);
           stop();
         },
@@ -60,9 +100,6 @@ const Scanner = (function () {
       });
   }
 
-  /**
-   * Hentikan scanner & bersihkan video.
-   */
   function stop() {
     if (!qrScanner) {
       isScanning = false;
@@ -79,7 +116,6 @@ const Scanner = (function () {
         instance.clear();
       })
       .catch(() => {
-        // Abaikan error saat stop (kamera mungkin sudah mati)
         try { instance.clear(); } catch (e) {}
       });
   }
