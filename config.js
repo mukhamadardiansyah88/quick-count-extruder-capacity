@@ -6,7 +6,7 @@
 const CONFIG = {
   /* ---------- BACKEND ---------- */
   // Ganti dengan URL deployment GAS Anda (mode JSONP)
-  GAS_URL: "https://script.google.com/macros/s/XXXXXXXXXXXXX/exec",
+  GAS_URL: "https://script.google.com/macros/s/AKfycbzK5wZ752yCKix9WTNZzmEg2tvfhSIXkA9-2zXGiKB1xTDUWc-t2qLd01CtAemBIrVm/exec",
 
   // Spreadsheet baru (dipakai backend; frontend tetap lewat GAS)
   SPREADSHEET_ID: "1P50K6PQZ58Sy1HMYzL1XAkQJfgn74O1UYEb86x_Mf2c",
