@@ -23,11 +23,11 @@
 <!-- ================= HEADER ================= -->
 <header class="app-header">
   <div class="header-glow"></div>
+  <img class="app-icon" src="https://cdn-icons-png.flaticon.com/512/4412/4412977.png" alt="Quick Count">
   <h1 class="app-title">
     <span class="title-line1">Quick Count</span>
     <span class="title-line2">Extruder Capacity</span>
   </h1>
-  <p class="app-subtitle">PT Mahkota Sukses Makmur</p>
 </header>
 
 <main class="app-main">
@@ -47,7 +47,7 @@
   </section>
 
   <!-- ================= SECTION: HASIL SPK ================= -->
-  <section class="card hidden" id="cardHasilSPK">
+  <section class="card card-info hidden" id="cardHasilSPK">
     <h2 class="card-title">Informasi SPK</h2>
     <div id="infoSPK" class="info-spk"></div>
     <button type="button" id="btnTutupInfoSPK" class="btn btn-red btn-full mt-8">Tutup Info</button>
@@ -80,7 +80,7 @@
 
     <div id="stopwatchDisplay" class="stopwatch-display">00:00:00,00</div>
 
-    <button type="button" id="btnStopwatch" class="btn btn-green btn-full mt-8">Mulai</button>
+    <button type="button" id="btnStopwatch" class="btn btn-green btn-full btn-big mt-8">Mulai</button>
 
     <p id="warningDurasi" class="warning hidden">Durasi singkat, hasil ekstrapolasi kurang akurat</p>
   </section>
@@ -108,7 +108,7 @@
 
   <!-- ================= SECTION: RESET ================= -->
   <section class="card">
-    <button type="button" id="btnResetAll" class="btn btn-red btn-full">Reset All</button>
+    <button type="button" id="btnResetAll" class="btn btn-red btn-full btn-big">Reset All</button>
   </section>
 
   <!-- ================= SECTION: OUTPUT ================= -->
@@ -140,7 +140,9 @@
 
 <!-- ================= FOOTER ================= -->
 <footer class="app-footer">
-  <p>PT Mahkota Sukses Makmur</p>
+  <span class="footer-line"></span>
+  <span class="footer-text">PT Mahkota Sukses Makmur <span class="footer-dot">•</span> <span id="tahunFooter">2026</span></span>
+  <span class="footer-line"></span>
 </footer>
 
 <!-- ================= OVERLAY: SCANNER ================= -->
