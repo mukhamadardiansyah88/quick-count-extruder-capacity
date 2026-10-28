@@ -1,6 +1,7 @@
 /* =========================================================
    app.js — Quick Count Extruder Capacity
    PT Mahkota Sukses Makmur
+   + bunyi sukses/gagal cari SPK (Web Audio API)
    ========================================================= */
 
 (function () {
@@ -8,51 +9,136 @@
 
   /* ================= STATE ================= */
   const state = {
-    masterSPK: [],          // cache semua SPK dari GAS
-    spkAktif: null,         // objek SPK terpilih
-    timerId: null,          // interval stopwatch
-    running: false,         // stopwatch jalan?
-    startTime: 0,           // timestamp mulai
-    elapsedMs: 0,           // total ms saat stop / berjalan
-    durasiFinalMs: 0        // durasi saat stop (untuk hitung)
+    masterSPK: [],
+    spkAktif: null,
+    timerId: null,
+    running: false,
+    startTime: 0,
+    elapsedMs: 0,
+    durasiFinalMs: 0
   };
 
   /* ================= ELEMEN ================= */
   const el = {};
 
   function cacheElements() {
-    el.inputSPK            = document.getElementById("inputSPK");
-    el.btnScan             = document.getElementById("btnScan");
-    el.btnCariSPK          = document.getElementById("btnCariSPK");
+    el.inputSPK              = document.getElementById("inputSPK");
+    el.btnScan               = document.getElementById("btnScan");
+    el.btnCariSPK            = document.getElementById("btnCariSPK");
 
-    el.cardHasilSPK        = document.getElementById("cardHasilSPK");
-    el.infoSPK             = document.getElementById("infoSPK");
-    el.btnTutupInfoSPK     = document.getElementById("btnTutupInfoSPK");
+    el.cardHasilSPK          = document.getElementById("cardHasilSPK");
+    el.infoSPK               = document.getElementById("infoSPK");
+    el.btnTutupInfoSPK       = document.getElementById("btnTutupInfoSPK");
 
-    el.inputPanjangSPK     = document.getElementById("inputPanjangSPK");
+    el.inputPanjangSPK       = document.getElementById("inputPanjangSPK");
     el.inputSettinganCounter = document.getElementById("inputSettinganCounter");
 
-    el.stopwatchDisplay    = document.getElementById("stopwatchDisplay");
-    el.btnStopwatch        = document.getElementById("btnStopwatch");
-    el.warningDurasi       = document.getElementById("warningDurasi");
+    el.stopwatchDisplay      = document.getElementById("stopwatchDisplay");
+    el.btnStopwatch          = document.getElementById("btnStopwatch");
+    el.warningDurasi         = document.getElementById("warningDurasi");
 
-    el.inputCounterAwal    = document.getElementById("inputCounterAwal");
-    el.inputCounterAkhir   = document.getElementById("inputCounterAkhir");
+    el.inputCounterAwal      = document.getElementById("inputCounterAwal");
+    el.inputCounterAkhir     = document.getElementById("inputCounterAkhir");
 
-    el.btnResetAll         = document.getElementById("btnResetAll");
+    el.btnResetAll           = document.getElementById("btnResetAll");
 
-    el.outPerJam           = document.getElementById("outPerJam");
-    el.outPerShift         = document.getElementById("outPerShift");
-    el.outPerHari          = document.getElementById("outPerHari");
+    el.outPerJam             = document.getElementById("outPerJam");
+    el.outPerShift           = document.getElementById("outPerShift");
+    el.outPerHari            = document.getElementById("outPerHari");
 
-    el.overlayScanner      = document.getElementById("overlayScanner");
-    el.btnTutupScanner     = document.getElementById("btnTutupScanner");
-    el.readerScanner       = document.getElementById("readerScanner");
+    el.overlayScanner        = document.getElementById("overlayScanner");
+    el.btnTutupScanner       = document.getElementById("btnTutupScanner");
+    el.readerScanner         = document.getElementById("readerScanner");
 
-    el.overlayReset        = document.getElementById("overlayReset");
-    el.btnTutupReset       = document.getElementById("btnTutupReset");
-    el.btnKonfirmasiReset  = document.getElementById("btnKonfirmasiReset");
-    el.btnBatalReset       = document.getElementById("btnBatalReset");
+    el.overlayReset          = document.getElementById("overlayReset");
+    el.btnTutupReset         = document.getElementById("btnTutupReset");
+    el.btnKonfirmasiReset    = document.getElementById("btnKonfirmasiReset");
+    el.btnBatalReset         = document.getElementById("btnBatalReset");
+  }
+
+  /* ================= AUDIO ================= */
+  let audioCtx = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  /**
+   * Bunyi sukses: 4 nada sine naik 660→880→1100→1320 Hz.
+   */
+  function beepSukses() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const freqs = [660, 880, 1100, 1320];
+    const durasi = 0.12;
+    const jeda = 0.02;
+
+    freqs.forEach((f, i) => {
+      const t = now + i * (durasi + jeda);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(f, t);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.55, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + durasi);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + durasi + 0.01);
+    });
+  }
+
+  /**
+   * Bunyi gagal: 2 ketukan square turun 400→200 Hz, jeda 230 ms.
+   */
+  function beepGagal() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const freqs = [400, 200];
+    const durasi = 0.12;
+    const jeda = 0.23;
+
+    freqs.forEach((f, i) => {
+      const t = now + i * jeda;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "square";
+      osc.frequency.setValueAtTime(f, t);
+
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.4, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + durasi);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + durasi + 0.01);
+    });
+  }
+
+  function getar(pola) {
+    if (navigator.vibrate) {
+      try { navigator.vibrate(pola); } catch (e) {}
+    }
   }
 
   /* ================= UTIL ================= */
@@ -66,21 +152,18 @@
     const jam     = Math.floor(totalMs / 3600000);
     const menit   = Math.floor((totalMs % 3600000) / 60000);
     const detik   = Math.floor((totalMs % 60000) / 1000);
-    const centi   = Math.floor((totalMs % 1000) / 10); // 2 digit (00-99)
+    const centi   = Math.floor((totalMs % 1000) / 10);
     return pad2(jam) + ":" + pad2(menit) + ":" + pad2(detik) + "," + pad2(centi);
   }
 
   function durasiKeJam(ms) {
-    return ms / 3600000; // ms → jam desimal
+    return ms / 3600000;
   }
 
   function parseAngka(str) {
     if (str === null || str === undefined) return NaN;
-    // Ganti koma jadi titik, hapus spasi & pemisah ribuan titik
     let s = String(str).trim().replace(/\s/g, "");
     s = s.replace(/,/g, ".");
-    // Hapus titik pemisah ribuan jika ada lebih dari satu titik / pola ribuan
-    // Sederhana: biarkan satu titik terakhir sebagai desimal
     const parts = s.split(".");
     if (parts.length > 2) {
       const desimal = parts.pop();
@@ -143,7 +226,6 @@
   async function loadMasterSPK() {
     try {
       const res = await jsonp("getMasterSPK", {});
-      // res: { ok: true, data: [ { noSPK, jenis, tebal, lebar, lipat, panjangPot, panjangRol, bd, ... } ] }
       if (res && res.ok && Array.isArray(res.data)) {
         state.masterSPK = res.data;
         console.log("[QuickCount] Master SPK loaded:", state.masterSPK.length, "baris");
@@ -154,7 +236,6 @@
     } catch (e) {
       console.error("[QuickCount] Gagal load master SPK:", e);
       state.masterSPK = [];
-      // Tidak blocking; user tetap bisa coba cari SPK (akan gagal sampai data termuat)
     }
   }
 
@@ -164,6 +245,8 @@
     if (!no) {
       el.inputSPK.classList.add("error");
       setTimeout(() => el.inputSPK.classList.remove("error"), 1200);
+      beepGagal();
+      getar([80, 40, 80]);
       return;
     }
 
@@ -174,11 +257,15 @@
     if (!found) {
       el.inputSPK.classList.add("error");
       setTimeout(() => el.inputSPK.classList.remove("error"), 1200);
+      beepGagal();
+      getar([80, 40, 80]);
       return;
     }
 
     el.inputSPK.classList.remove("error");
     state.spkAktif = found;
+    beepSukses();
+    getar(40);
     tampilInfoSPK(found);
   }
 
@@ -221,8 +308,6 @@
   function tutupInfoSPK() {
     el.cardHasilSPK.classList.add("hidden");
     el.infoSPK.innerHTML = "";
-    // Tidak menghapus state.spkAktif — supaya hitungan tetap jalan.
-    // Reset All yang akan menghapusnya.
   }
 
   /* ================= STOPWATCH ================= */
@@ -237,8 +322,7 @@
   function startStopwatch() {
     if (state.running) return;
 
-    // Reset elapsed dari 0 jika sebelumnya sudah stop
-    state.startTime = Date.now() - (state.running ? state.elapsedMs : 0);
+    state.startTime = Date.now();
     state.elapsedMs = 0;
     state.running = true;
 
@@ -267,7 +351,6 @@
     el.btnStopwatch.classList.remove("btn-red");
     el.btnStopwatch.classList.add("btn-green");
 
-    // Peringatan durasi
     if (state.durasiFinalMs > 0 && state.durasiFinalMs < CONFIG.DURASI_MIN_PERINGATAN * 1000) {
       el.warningDurasi.classList.remove("hidden");
     } else {
@@ -285,7 +368,6 @@
 
   /* ================= HITUNG ================= */
   function hitungSemua() {
-    // Ambil semua nilai
     const spk = state.spkAktif;
     const panjangSPK = parseAngka(el.inputPanjangSPK.value);
     const settingan = parseAngka(el.inputSettinganCounter.value);
@@ -293,17 +375,14 @@
     const cAkhir = parseAngka(el.inputCounterAkhir.value);
     const durasiMs = state.durasiFinalMs;
 
-    // Reset output dulu
     setOutput("—", "—", "—");
 
-    // Validasi: SPK & durasi & parameter
     if (!spk) return;
     if (!isFinite(durasiMs) || durasiMs <= 0) return;
     if (!isFinite(panjangSPK) || panjangSPK <= 0) return;
     if (!isFinite(settingan) || settingan <= 0) return;
     if (!isFinite(cAwal) || !isFinite(cAkhir)) return;
 
-    // Counter akhir < awal → tidak valid
     if (cAkhir < cAwal) {
       el.inputCounterAkhir.classList.add("error");
       return;
@@ -311,17 +390,15 @@
       el.inputCounterAkhir.classList.remove("error");
     }
 
-    // Ambil tebal, lebar, BD dari SPK
     const tebal = parseAngka(spk.tebal);
     const lebar = parseAngka(spk.lebar);
     const bd = parseAngka(spk.bd);
 
     if (!isFinite(tebal) || !isFinite(lebar) || !isFinite(bd)) return;
 
-    // Rumus
     const deltaCounter = cAkhir - cAwal;
-    const panjangProduksi = (deltaCounter / settingan) * panjangSPK; // Meter
-    const berat = (tebal * lebar * panjangProduksi * bd) / CONFIG.KONSTANTA_BERAT; // Kg
+    const panjangProduksi = (deltaCounter / settingan) * panjangSPK;
+    const berat = (tebal * lebar * panjangProduksi * bd) / CONFIG.KONSTANTA_BERAT;
     const durasiJam = durasiKeJam(durasiMs);
 
     if (!isFinite(durasiJam) || durasiJam <= 0) return;
@@ -353,12 +430,10 @@
   }
 
   function resetAll() {
-    // Stop stopwatch jika jalan
     if (state.running) {
       stopStopwatch();
     }
 
-    // Reset state
     state.spkAktif = null;
     state.timerId = null;
     state.running = false;
@@ -366,32 +441,26 @@
     state.elapsedMs = 0;
     state.durasiFinalMs = 0;
 
-    // Reset input
     el.inputSPK.value = "";
     el.inputPanjangSPK.value = "";
     el.inputSettinganCounter.value = "";
     el.inputCounterAwal.value = "";
     el.inputCounterAkhir.value = "";
 
-    // Reset kelas error
     el.inputSPK.classList.remove("error");
     el.inputCounterAkhir.classList.remove("error");
 
-    // Reset stopwatch display & tombol
     el.stopwatchDisplay.textContent = "00:00:00,00";
     el.btnStopwatch.textContent = "Mulai";
     el.btnStopwatch.classList.remove("btn-red");
     el.btnStopwatch.classList.add("btn-green");
     el.warningDurasi.classList.add("hidden");
 
-    // Sembunyikan info SPK
     el.cardHasilSPK.classList.add("hidden");
     el.infoSPK.innerHTML = "";
 
-    // Reset output
     setOutput("—", "—", "—");
 
-    // Tutup overlay reset
     tutupOverlayReset();
   }
 
@@ -421,7 +490,6 @@
 
   /* ================= EVENT BINDING ================= */
   function bindEvents() {
-    // SPK
     el.btnCariSPK.addEventListener("click", cariSPK);
     el.inputSPK.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
@@ -430,17 +498,13 @@
       }
     });
 
-    // Scanner
     el.btnScan.addEventListener("click", bukaScanner);
     el.btnTutupScanner.addEventListener("click", tutupScanner);
 
-    // Info SPK
     el.btnTutupInfoSPK.addEventListener("click", tutupInfoSPK);
 
-    // Stopwatch
     el.btnStopwatch.addEventListener("click", toggleStopwatch);
 
-    // Hitung ulang setiap input berubah
     [
       el.inputPanjangSPK,
       el.inputSettinganCounter,
@@ -452,16 +516,11 @@
       });
     });
 
-    // Reset All
     el.btnResetAll.addEventListener("click", bukaOverlayReset);
     el.btnTutupReset.addEventListener("click", tutupOverlayReset);
     el.btnBatalReset.addEventListener("click", tutupOverlayReset);
     el.btnKonfirmasiReset.addEventListener("click", resetAll);
 
-    // Overlay kaku: JANGAN tutup saat klik luar / Escape
-    // (tidak ada listener untuk itu)
-
-    // Passive scroll untuk HP
     window.addEventListener("touchmove", function () {}, { passive: true });
   }
 
@@ -469,7 +528,7 @@
   function init() {
     cacheElements();
     bindEvents();
-    loadMasterSPK(); // async, tidak blocking
+    loadMasterSPK();
     el.stopwatchDisplay.textContent = formatDurasi(0);
   }
 
