@@ -5,11 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Quick Count Extruder Capacity</title>
 
-<!-- Favicon & Ikon HP -->
-<link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="manifest" href="manifest.json">
+<!-- Ikon (Flaticon) -->
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/4412/4412977.png">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4412/4412977.png">
 <meta name="theme-color" content="#00e5ff">
+
+<!-- Font: Rajdhani -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Style -->
 <link rel="stylesheet" href="style.css">
@@ -18,7 +22,12 @@
 
 <!-- ================= HEADER ================= -->
 <header class="app-header">
-  <h1>Quick Count<br><span>Extruder Capacity</span></h1>
+  <div class="header-glow"></div>
+  <h1 class="app-title">
+    <span class="title-line1">Quick Count</span>
+    <span class="title-line2">Extruder Capacity</span>
+  </h1>
+  <p class="app-subtitle">PT Mahkota Sukses Makmur</p>
 </header>
 
 <main class="app-main">
@@ -37,7 +46,7 @@
     </div>
   </section>
 
-  <!-- ================= SECTION: HASIL SPK (read-only) ================= -->
+  <!-- ================= SECTION: HASIL SPK ================= -->
   <section class="card hidden" id="cardHasilSPK">
     <h2 class="card-title">Informasi SPK</h2>
     <div id="infoSPK" class="info-spk"></div>
@@ -66,7 +75,7 @@
   </section>
 
   <!-- ================= SECTION: STOPWATCH ================= -->
-  <section class="card">
+  <section class="card card-stopwatch">
     <h2 class="card-title">Stopwatch</h2>
 
     <div id="stopwatchDisplay" class="stopwatch-display">00:00:00,00</div>
@@ -103,7 +112,7 @@
   </section>
 
   <!-- ================= SECTION: OUTPUT ================= -->
-  <section class="card">
+  <section class="card card-output">
     <h2 class="card-title">Hasil Kalkulasi</h2>
 
     <div class="output-grid">
