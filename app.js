@@ -1,7 +1,6 @@
 /* =========================================================
    app.js — Quick Count Extruder Capacity
    PT Mahkota Sukses Makmur
-   + bunyi sukses/gagal cari SPK (Web Audio API)
    ========================================================= */
 
 (function () {
@@ -54,6 +53,8 @@
     el.btnTutupReset         = document.getElementById("btnTutupReset");
     el.btnKonfirmasiReset    = document.getElementById("btnKonfirmasiReset");
     el.btnBatalReset         = document.getElementById("btnBatalReset");
+
+    el.tahunFooter           = document.getElementById("tahunFooter");
   }
 
   /* ================= AUDIO ================= */
@@ -71,67 +72,90 @@
     return audioCtx;
   }
 
-  /**
-   * Bunyi sukses: 4 nada sine naik 660→880→1100→1320 Hz.
-   */
+  function nada(ctx, freq, t, durasi, tipe, gainLevel) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = tipe;
+    osc.frequency.setValueAtTime(freq, t);
+
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(gainLevel, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + durasi);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + durasi + 0.01);
+  }
+
+  /** Sukses cari SPK: 4 nada sine naik 660→880→1100→1320 Hz */
   function beepSukses() {
     const ctx = getAudioCtx();
     if (!ctx) return;
-
     const now = ctx.currentTime;
     const freqs = [660, 880, 1100, 1320];
-    const durasi = 0.12;
-    const jeda = 0.02;
-
     freqs.forEach((f, i) => {
-      const t = now + i * (durasi + jeda);
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(f, t);
-
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.55, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + durasi);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(t);
-      osc.stop(t + durasi + 0.01);
+      nada(ctx, f, now + i * 0.14, 0.12, "sine", 0.55);
     });
   }
 
-  /**
-   * Bunyi gagal: 2 ketukan square turun 400→200 Hz, jeda 230 ms.
-   */
+  /** Gagal cari SPK: 2 ketukan square turun 400→200 Hz */
   function beepGagal() {
     const ctx = getAudioCtx();
     if (!ctx) return;
-
     const now = ctx.currentTime;
-    const freqs = [400, 200];
-    const durasi = 0.12;
-    const jeda = 0.23;
+    [400, 200].forEach((f, i) => {
+      nada(ctx, f, now + i * 0.23, 0.12, "square", 0.4);
+    });
+  }
 
-    freqs.forEach((f, i) => {
-      const t = now + i * jeda;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+  /** Mulai stopwatch: sine naik 660→880 Hz */
+  function beepMulai() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(660, now);
+    osc.frequency.linearRampToValueAtTime(880, now + 0.1);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.45, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.13);
+  }
 
-      osc.type = "square";
-      osc.frequency.setValueAtTime(f, t);
+  /** Stop stopwatch: sine turun 880→660 Hz */
+  function beepStop() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.linearRampToValueAtTime(660, now + 0.1);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.45, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.13);
+  }
 
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.4, t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + durasi);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(t);
-      osc.stop(t + durasi + 0.01);
+  /** Reset: 2 nada sine turun 660→440 Hz */
+  function beepReset() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    [660, 440].forEach((f, i) => {
+      nada(ctx, f, now + i * 0.14, 0.12, "sine", 0.45);
     });
   }
 
@@ -160,6 +184,9 @@
     return ms / 3600000;
   }
 
+  /**
+   * Parse angka toleran koma/titik, thousand separator.
+   */
   function parseAngka(str) {
     if (str === null || str === undefined) return NaN;
     let s = String(str).trim().replace(/\s/g, "");
@@ -177,6 +204,69 @@
     return angka.toLocaleString(CONFIG.LOCALE, {
       minimumFractionDigits: CONFIG.DESIMAL_OUTPUT,
       maximumFractionDigits: CONFIG.DESIMAL_OUTPUT
+    });
+  }
+
+  /**
+   * Format angka input: thousand separator titik, desimal koma.
+   * Contoh: "1200.5" / "1200,5" → "1.200,5"
+   * Kosong / bukan angka → "" (biar user bisa hapus).
+   */
+  function formatRibuan(str) {
+    if (str === null || str === undefined) return "";
+    let raw = String(str).trim();
+    if (!raw) return "";
+
+    // Ambil digit dan pemisah desimal (koma atau titik terakhir)
+    // Normalisasi: koma jadi titik dulu untuk parsing
+    let normalized = raw.replace(/,/g, ".");
+    // Hapus semua titik kecuali yang terakhir (anggap desimal)
+    const lastDot = normalized.lastIndexOf(".");
+    if (lastDot >= 0) {
+      const intPart = normalized.slice(0, lastDot).replace(/\./g, "");
+      const decPart = normalized.slice(lastDot + 1).replace(/\./g, "");
+      normalized = intPart + "." + decPart;
+    }
+
+    // Pisahkan integer & desimal
+    let [intPart, decPart] = normalized.split(".");
+    intPart = (intPart || "").replace(/\D/g, "");
+    if (decPart !== undefined) {
+      decPart = decPart.replace(/\D/g, "");
+    }
+
+    if (!intPart && decPart === undefined) return "";
+
+    // Format ribuan pada integer
+    let intFormatted = "";
+    if (intPart) {
+      intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    } else {
+      intFormatted = "0";
+    }
+
+    if (decPart !== undefined && decPart !== "") {
+      return intFormatted + "," + decPart;
+    }
+    return intFormatted;
+  }
+
+  /**
+   * Pasang formatter ribuan pada input.
+   */
+  function pasangFormatterRibuan(input) {
+    input.addEventListener("input", function () {
+      const posisiAkhir = input.selectionStart === input.value.length;
+      const formatted = formatRibuan(input.value);
+      if (formatted !== input.value) {
+        input.value = formatted;
+        if (posisiAkhir) {
+          // Kursor ke akhir
+          const len = input.value.length;
+          try { input.setSelectionRange(len, len); } catch (e) {}
+        }
+      }
+      hitungSemua();
     });
   }
 
@@ -242,11 +332,13 @@
   /* ================= CARI SPK ================= */
   function cariSPK() {
     const no = (el.inputSPK.value || "").trim();
+
     if (!no) {
       el.inputSPK.classList.add("error");
       setTimeout(() => el.inputSPK.classList.remove("error"), 1200);
       beepGagal();
       getar([80, 40, 80]);
+      tampilGagalSPK("(kosong)");
       return;
     }
 
@@ -259,6 +351,7 @@
       setTimeout(() => el.inputSPK.classList.remove("error"), 1200);
       beepGagal();
       getar([80, 40, 80]);
+      tampilGagalSPK(no);
       return;
     }
 
@@ -266,34 +359,50 @@
     state.spkAktif = found;
     beepSukses();
     getar(40);
-    tampilInfoSPK(found);
+    tampilSuksesSPK(found);
   }
 
-  function tampilInfoSPK(spk) {
-    el.cardHasilSPK.classList.remove("hidden");
+  function tampilSuksesSPK(spk) {
+    el.cardHasilSPK.classList.remove("hidden", "gagal");
+    el.cardHasilSPK.classList.add("sukses");
 
-    const baris = [];
+    const tebal = (spk.tebal === undefined || spk.tebal === null) ? "" : String(spk.tebal);
+    const lebar = (spk.lebar === undefined || spk.lebar === null) ? "" : String(spk.lebar);
+    const lipat = (spk.lipat === undefined || spk.lipat === null) ? "" : String(spk.lipat).trim();
+    const bd    = (spk.bd === undefined || spk.bd === null) ? "" : String(spk.bd);
+    const jenis = (spk.jenis === undefined || spk.jenis === null) ? "—" : String(spk.jenis);
 
-    function row(label, value, isBD) {
-      const v = (value === undefined || value === null || value === "") ? "—" : value;
-      baris.push(
-        '<div class="info-row">' +
-          '<span class="info-label">' + escapeHtml(label) + '</span>' +
-          '<span class="info-value' + (isBD ? ' bd' : '') + '">' + escapeHtml(String(v)) + '</span>' +
-        '</div>'
-      );
+    // Format dimensi: tebal X lebar/lipat (kalau lipat ada & bukan 0 / "0")
+    const lipatNum = parseAngka(lipat);
+    const adaLipat = lipat !== "" && isFinite(lipatNum) && lipatNum > 0;
+
+    let dimensi;
+    if (adaLipat) {
+      dimensi = escapeHtml(tebal) + " X " + escapeHtml(lebar) + "/" + escapeHtml(lipat);
+    } else {
+      dimensi = escapeHtml(tebal) + " X " + escapeHtml(lebar);
     }
 
-    row("No SPK", spk.noSPK);
-    row("Jenis Plastik", spk.jenis);
-    row("Tebal (mm)", spk.tebal);
-    row("Lebar (cm)", spk.lebar);
-    row("Lipat (cm)", spk.lipat);
-    row("Panjang Pot (cm)", spk.panjangPot);
-    row("Panjang Rol (cm)", spk.panjangRol);
-    row("BD", spk.bd, true);
+    const html =
+      '<div class="spk-baris1">SPK <b>' + escapeHtml(spk.noSPK || "") + '</b></div>' +
+      '<div class="spk-jenis">' + escapeHtml(jenis) + '</div>' +
+      '<div class="spk-tebal-lebar">' +
+        '<span class="spk-dimensi">' + dimensi + '</span>' +
+        '<span class="spk-bd">BD ' + escapeHtml(bd) + '</span>' +
+      '</div>';
 
-    el.infoSPK.innerHTML = baris.join("");
+    el.infoSPK.innerHTML = html;
+  }
+
+  function tampilGagalSPK(no) {
+    el.cardHasilSPK.classList.remove("hidden", "sukses");
+    el.cardHasilSPK.classList.add("gagal");
+
+    const html =
+      '<div class="spk-baris1">SPK <b>' + escapeHtml(no) + '</b></div>' +
+      '<div class="spk-gagal">SPK tidak ditemukan</div>';
+
+    el.infoSPK.innerHTML = html;
   }
 
   function escapeHtml(str) {
@@ -330,6 +439,9 @@
     el.btnStopwatch.classList.remove("btn-green");
     el.btnStopwatch.classList.add("btn-red");
 
+    beepMulai();
+    getar(30);
+
     tick();
     state.timerId = setInterval(tick, 50);
   }
@@ -356,6 +468,9 @@
     } else {
       el.warningDurasi.classList.add("hidden");
     }
+
+    beepStop();
+    getar(30);
 
     hitungSemua();
   }
@@ -457,11 +572,15 @@
     el.warningDurasi.classList.add("hidden");
 
     el.cardHasilSPK.classList.add("hidden");
+    el.cardHasilSPK.classList.remove("sukses", "gagal");
     el.infoSPK.innerHTML = "";
 
     setOutput("—", "—", "—");
 
     tutupOverlayReset();
+
+    beepReset();
+    getar([40, 60, 40]);
   }
 
   /* ================= SCANNER UI ================= */
@@ -488,6 +607,13 @@
     el.overlayScanner.classList.remove("active");
   }
 
+  /* ================= INIT TAHUN ================= */
+  function setTahunFooter() {
+    if (el.tahunFooter) {
+      el.tahunFooter.textContent = String(new Date().getFullYear());
+    }
+  }
+
   /* ================= EVENT BINDING ================= */
   function bindEvents() {
     el.btnCariSPK.addEventListener("click", cariSPK);
@@ -505,16 +631,11 @@
 
     el.btnStopwatch.addEventListener("click", toggleStopwatch);
 
-    [
-      el.inputPanjangSPK,
-      el.inputSettinganCounter,
-      el.inputCounterAwal,
-      el.inputCounterAkhir
-    ].forEach((input) => {
-      input.addEventListener("input", function () {
-        hitungSemua();
-      });
-    });
+    // Formatter ribuan untuk 4 input
+    pasangFormatterRibuan(el.inputPanjangSPK);
+    pasangFormatterRibuan(el.inputSettinganCounter);
+    pasangFormatterRibuan(el.inputCounterAwal);
+    pasangFormatterRibuan(el.inputCounterAkhir);
 
     el.btnResetAll.addEventListener("click", bukaOverlayReset);
     el.btnTutupReset.addEventListener("click", tutupOverlayReset);
@@ -527,6 +648,7 @@
   /* ================= INIT ================= */
   function init() {
     cacheElements();
+    setTahunFooter();
     bindEvents();
     loadMasterSPK();
     el.stopwatchDisplay.textContent = formatDurasi(0);
