@@ -90,18 +90,15 @@
     osc.stop(t + durasi + 0.01);
   }
 
-  /** Sukses cari SPK: 4 nada sine naik 660→880→1100→1320 Hz */
   function beepSukses() {
     const ctx = getAudioCtx();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const freqs = [660, 880, 1100, 1320];
-    freqs.forEach((f, i) => {
+    [660, 880, 1100, 1320].forEach((f, i) => {
       nada(ctx, f, now + i * 0.14, 0.12, "sine", 0.55);
     });
   }
 
-  /** Gagal cari SPK: 2 ketukan square turun 400→200 Hz */
   function beepGagal() {
     const ctx = getAudioCtx();
     if (!ctx) return;
@@ -111,7 +108,6 @@
     });
   }
 
-  /** Mulai stopwatch: sine naik 660→880 Hz */
   function beepMulai() {
     const ctx = getAudioCtx();
     if (!ctx) return;
@@ -130,7 +126,6 @@
     osc.stop(now + 0.13);
   }
 
-  /** Stop stopwatch: sine turun 880→660 Hz */
   function beepStop() {
     const ctx = getAudioCtx();
     if (!ctx) return;
@@ -149,7 +144,6 @@
     osc.stop(now + 0.13);
   }
 
-  /** Reset: 2 nada sine turun 660→440 Hz */
   function beepReset() {
     const ctx = getAudioCtx();
     if (!ctx) return;
@@ -185,17 +179,15 @@
   }
 
   /**
-   * Parse angka toleran koma/titik, thousand separator.
+   * Parse angka dari format id-ID:
+   * - Titik = ribuan (dihapus)
+   * - Koma = desimal (jadi titik)
    */
   function parseAngka(str) {
     if (str === null || str === undefined) return NaN;
     let s = String(str).trim().replace(/\s/g, "");
-    s = s.replace(/,/g, ".");
-    const parts = s.split(".");
-    if (parts.length > 2) {
-      const desimal = parts.pop();
-      s = parts.join("") + "." + desimal;
-    }
+    s = s.replace(/\./g, "");   // hapus ribuan
+    s = s.replace(/,/g, ".");   // desimal koma → titik
     return parseFloat(s);
   }
 
@@ -208,42 +200,40 @@
   }
 
   /**
-   * Format angka input: thousand separator titik, desimal koma.
-   * Contoh: "1200.5" / "1200,5" → "1.200,5"
-   * Kosong / bukan angka → "" (biar user bisa hapus).
+   * Format angka untuk preview input:
+   * - Titik ribuan (sisipan otomatis) dihapus dulu lewat pola \d\.\d{3}\b
+   * - Titik sisa = ketikan user → dianggap koma (desimal)
+   * - Koma = desimal
+   * - Format ulang: ribuan pakai titik, desimal pakai koma
    */
   function formatRibuan(str) {
     if (str === null || str === undefined) return "";
     let raw = String(str).trim();
     if (!raw) return "";
 
-    // Ambil digit dan pemisah desimal (koma atau titik terakhir)
-    // Normalisasi: koma jadi titik dulu untuk parsing
-    let normalized = raw.replace(/,/g, ".");
-    // Hapus semua titik kecuali yang terakhir (anggap desimal)
-    const lastDot = normalized.lastIndexOf(".");
-    if (lastDot >= 0) {
-      const intPart = normalized.slice(0, lastDot).replace(/\./g, "");
-      const decPart = normalized.slice(lastDot + 1).replace(/\./g, "");
-      normalized = intPart + "." + decPart;
-    }
+    // 1. Hapus titik ribuan sisipan otomatis (pola 1.200 / 1.234.567)
+    raw = raw.replace(/(\d)\.(?=\d{3}\b)/g, "$1");
 
-    // Pisahkan integer & desimal
-    let [intPart, decPart] = normalized.split(".");
-    intPart = (intPart || "").replace(/\D/g, "");
-    if (decPart !== undefined) {
-      decPart = decPart.replace(/\D/g, "");
+    // 2. Titik sisa = ketikan user (dianggap desimal) → ubah jadi koma
+    raw = raw.replace(/\./g, ",");
+
+    // 3. Pisahkan integer & desimal berdasarkan koma pertama
+    const komaIdx = raw.indexOf(",");
+    let intPart, decPart;
+    if (komaIdx >= 0) {
+      intPart = raw.slice(0, komaIdx).replace(/\D/g, "");
+      decPart = raw.slice(komaIdx + 1).replace(/\D/g, "");
+    } else {
+      intPart = raw.replace(/\D/g, "");
+      decPart = undefined;
     }
 
     if (!intPart && decPart === undefined) return "";
 
-    // Format ribuan pada integer
-    let intFormatted = "";
-    if (intPart) {
-      intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-    } else {
-      intFormatted = "0";
-    }
+    // 4. Format ribuan
+    let intFormatted = intPart
+      ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+      : "0";
 
     if (decPart !== undefined && decPart !== "") {
       return intFormatted + "," + decPart;
@@ -251,9 +241,6 @@
     return intFormatted;
   }
 
-  /**
-   * Pasang formatter ribuan pada input.
-   */
   function pasangFormatterRibuan(input) {
     input.addEventListener("input", function () {
       const posisiAkhir = input.selectionStart === input.value.length;
@@ -261,7 +248,6 @@
       if (formatted !== input.value) {
         input.value = formatted;
         if (posisiAkhir) {
-          // Kursor ke akhir
           const len = input.value.length;
           try { input.setSelectionRange(len, len); } catch (e) {}
         }
@@ -372,7 +358,6 @@
     const bd    = (spk.bd === undefined || spk.bd === null) ? "" : String(spk.bd);
     const jenis = (spk.jenis === undefined || spk.jenis === null) ? "—" : String(spk.jenis);
 
-    // Format dimensi: tebal X lebar/lipat (kalau lipat ada & bukan 0 / "0")
     const lipatNum = parseAngka(lipat);
     const adaLipat = lipat !== "" && isFinite(lipatNum) && lipatNum > 0;
 
@@ -631,7 +616,6 @@
 
     el.btnStopwatch.addEventListener("click", toggleStopwatch);
 
-    // Formatter ribuan untuk 4 input
     pasangFormatterRibuan(el.inputPanjangSPK);
     pasangFormatterRibuan(el.inputSettinganCounter);
     pasangFormatterRibuan(el.inputCounterAwal);
