@@ -1,1 +1,204 @@
-a
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Quick Count Extruder Capacity</title>
+
+<!-- Ikon (Flaticon) -->
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/4412/4412977.png">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4412/4412977.png">
+<meta name="theme-color" content="#00e5ff">
+
+<!-- Font: Rajdhani -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Style -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ================= HEADER ================= -->
+<header class="app-header">
+  <div class="header-glow"></div>
+  <img class="app-icon" src="https://cdn-icons-png.flaticon.com/512/4412/4412977.png" alt="Quick Count">
+  <h1 class="app-title">
+    <span class="title-line1">Quick Count</span>
+    <span class="title-line2">Extruder Capacity</span>
+  </h1>
+</header>
+
+<main class="app-main">
+
+  <!-- ================= SECTION: INPUT SPK ================= -->
+  <section class="card">
+    <h2 class="card-title">Input SPK</h2>
+
+    <div class="input-row">
+      <input type="text" id="inputSPK" class="neon-input" placeholder="Ketik / Scan No SPK" inputmode="numeric" autocomplete="off">
+      <button type="button" id="btnScan" class="btn btn-pink" title="Scan SPK">📷</button>
+    </div>
+
+    <div class="input-row">
+      <button type="button" id="btnCariSPK" class="btn btn-cyan btn-full">Cari SPK</button>
+    </div>
+  </section>
+
+  <!-- ================= SECTION: HASIL SPK ================= -->
+  <section class="card card-info hidden" id="cardHasilSPK">
+    <h2 class="card-title">Informasi SPK</h2>
+    <div id="infoSPK" class="info-spk"></div>
+    <button type="button" id="btnTutupInfoSPK" class="btn btn-red btn-full mt-8">Tutup Info</button>
+  </section>
+
+  <!-- ================= SECTION: PARAMETER ================= -->
+  <section class="card">
+    <h2 class="card-title">Parameter</h2>
+
+    <div class="field">
+      <label for="inputPanjangSPK">Panjang SPK</label>
+      <div class="input-unit">
+        <input type="text" id="inputPanjangSPK" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
+        <span class="unit">Meter</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="inputSettinganCounter">Settingan Counter Mesin</label>
+      <div class="input-unit">
+        <input type="text" id="inputSettinganCounter" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
+        <span class="unit">Counter</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SECTION: STOPWATCH ================= -->
+  <section class="card card-stopwatch">
+    <h2 class="card-title">Stopwatch</h2>
+
+    <div id="stopwatchDisplay" class="stopwatch-display">00:00:00,00</div>
+
+    <button type="button" id="btnStopwatch" class="btn btn-green btn-full btn-big mt-8">Mulai</button>
+
+    <p id="warningDurasi" class="warning hidden">Durasi singkat, hasil ekstrapolasi kurang akurat</p>
+  </section>
+
+  <!-- ================= SECTION: COUNTER ================= -->
+  <section class="card">
+    <h2 class="card-title">Counter</h2>
+
+    <div class="field">
+      <label for="inputCounterAwal">Counter Awal</label>
+      <div class="input-unit">
+        <input type="text" id="inputCounterAwal" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
+        <span class="unit">Counter</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="inputCounterAkhir">Counter Akhir</label>
+      <div class="input-unit">
+        <input type="text" id="inputCounterAkhir" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
+        <span class="unit">Counter</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SECTION: RESET ================= -->
+  <section class="card">
+    <button type="button" id="btnResetAll" class="btn btn-red btn-full btn-big">Reset All</button>
+  </section>
+
+  <!-- ================= SECTION: OUTPUT ================= -->
+  <section class="card card-output">
+    <h2 class="card-title">Hasil Kalkulasi</h2>
+
+    <div class="output-grid">
+      <div class="output-card output-cyan">
+        <span class="output-label">Per Jam</span>
+        <span class="output-value" id="outPerJam">—</span>
+        <span class="output-unit">Kg</span>
+      </div>
+
+      <div class="output-card output-pink">
+        <span class="output-label">Per Shift (12 Jam)</span>
+        <span class="output-value" id="outPerShift">—</span>
+        <span class="output-unit">Kg</span>
+      </div>
+
+      <div class="output-card output-green">
+        <span class="output-label">Per Hari (24 Jam)</span>
+        <span class="output-value" id="outPerHari">—</span>
+        <span class="output-unit">Kg</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="app-footer">
+  <span class="footer-line"></span>
+  <span class="footer-text">PT Mahkota Sukses Makmur <span class="footer-dot">•</span> <span id="tahunFooter">2026</span></span>
+  <span class="footer-line"></span>
+</footer>
+
+<!-- ================= OVERLAY: SCANNER ================= -->
+<div class="overlay" id="overlayScanner">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Scan SPK</h3>
+      <button type="button" class="btn-close" id="btnTutupScanner">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="readerScanner"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OVERLAY: KONFIRMASI RESET ================= -->
+<div class="overlay" id="overlayReset">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Reset Semua?</h3>
+      <button type="button" class="btn-close" id="btnTutupReset">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-text">Semua input dan hasil akan dikosongkan. Lanjutkan?</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-red" id="btnKonfirmasiReset">Ya, Reset</button>
+        <button type="button" class="btn btn-cyan" id="btnBatalReset">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OVERLAY: KONFIRMASI MULAI ULANG ================= -->
+<div class="overlay" id="overlayMulaiUlang">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Mulai Ulang?</h3>
+      <button type="button" class="btn-close" id="btnTutupMulaiUlang">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-text">
+        Durasi sebelumnya <b id="teksDurasiSebelumnya">00:00:00,00</b> akan hilang. Lanjutkan?
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-green" id="btnKonfirmasiMulaiUlang">Ya, Mulai Ulang</button>
+        <button type="button" class="btn btn-cyan" id="btnBatalMulaiUlang">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="config.js"></script>
+<script src="scanner.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
