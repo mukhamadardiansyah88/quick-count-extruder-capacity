@@ -60,7 +60,7 @@
     <div class="field">
       <label for="inputPanjangSPK">Panjang SPK</label>
       <div class="input-unit">
-        <input type="text" id="inputPanjangSPK" class="neon-input" placeholder="0" inputmode="decimal" autocomplete="off">
+        <input type="text" id="inputPanjangSPK" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
         <span class="unit">Meter</span>
       </div>
     </div>
@@ -68,7 +68,7 @@
     <div class="field">
       <label for="inputSettinganCounter">Settingan Counter Mesin</label>
       <div class="input-unit">
-        <input type="text" id="inputSettinganCounter" class="neon-input" placeholder="0" inputmode="decimal" autocomplete="off">
+        <input type="text" id="inputSettinganCounter" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
         <span class="unit">Counter</span>
       </div>
     </div>
@@ -92,7 +92,7 @@
     <div class="field">
       <label for="inputCounterAwal">Counter Awal</label>
       <div class="input-unit">
-        <input type="text" id="inputCounterAwal" class="neon-input" placeholder="0" inputmode="decimal" autocomplete="off">
+        <input type="text" id="inputCounterAwal" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
         <span class="unit">Counter</span>
       </div>
     </div>
@@ -100,7 +100,7 @@
     <div class="field">
       <label for="inputCounterAkhir">Counter Akhir</label>
       <div class="input-unit">
-        <input type="text" id="inputCounterAkhir" class="neon-input" placeholder="0" inputmode="decimal" autocomplete="off">
+        <input type="text" id="inputCounterAkhir" class="neon-input" placeholder="0" inputmode="numeric" autocomplete="off">
         <span class="unit">Counter</span>
       </div>
     </div>
@@ -170,6 +170,25 @@
       <div class="modal-actions">
         <button type="button" class="btn btn-red" id="btnKonfirmasiReset">Ya, Reset</button>
         <button type="button" class="btn btn-cyan" id="btnBatalReset">Batal</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OVERLAY: KONFIRMASI MULAI ULANG ================= -->
+<div class="overlay" id="overlayMulaiUlang">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Mulai Ulang?</h3>
+      <button type="button" class="btn-close" id="btnTutupMulaiUlang">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-text">
+        Durasi sebelumnya <b id="teksDurasiSebelumnya">00:00:00,00</b> akan hilang. Lanjutkan?
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-green" id="btnKonfirmasiMulaiUlang">Ya, Mulai Ulang</button>
+        <button type="button" class="btn btn-cyan" id="btnBatalMulaiUlang">Batal</button>
       </div>
     </div>
   </div>
