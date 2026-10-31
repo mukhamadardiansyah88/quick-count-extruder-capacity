@@ -1,8 +1,6 @@
 /* =========================================================
    app.js — Quick Count Extruder Capacity
    PT Mahkota Sukses Makmur
-   Input user: hanya digit (titik & koma diabaikan).
-   Nilai SPK (tebal/lebar/lipat/bd): desimal koma didukung.
    ========================================================= */
 
 (function () {
@@ -55,6 +53,12 @@
     el.btnTutupReset         = document.getElementById("btnTutupReset");
     el.btnKonfirmasiReset    = document.getElementById("btnKonfirmasiReset");
     el.btnBatalReset         = document.getElementById("btnBatalReset");
+
+    el.overlayMulaiUlang     = document.getElementById("overlayMulaiUlang");
+    el.teksDurasiSebelumnya  = document.getElementById("teksDurasiSebelumnya");
+    el.btnTutupMulaiUlang    = document.getElementById("btnTutupMulaiUlang");
+    el.btnKonfirmasiMulaiUlang = document.getElementById("btnKonfirmasiMulaiUlang");
+    el.btnBatalMulaiUlang    = document.getElementById("btnBatalMulaiUlang");
 
     el.tahunFooter           = document.getElementById("tahunFooter");
   }
@@ -180,11 +184,7 @@
     return ms / 3600000;
   }
 
-  /**
-   * Parse angka dari INPUT USER:
-   * - Hanya digit, titik & koma diabaikan.
-   * - Return integer.
-   */
+  /** Parse angka dari INPUT USER: hanya digit, return integer. */
   function parseAngkaInput(str) {
     if (str === null || str === undefined) return NaN;
     let s = String(str).replace(/\D/g, "");
@@ -192,18 +192,13 @@
     return parseInt(s, 10);
   }
 
-  /**
-   * Parse angka DESIMAL dari DATABASE SPK (format id-ID):
-   * - Titik = ribuan (dihapus)
-   * - Koma = desimal (jadi titik)
-   * - Return float.
-   */
+  /** Parse angka DESIMAL dari DATABASE SPK (id-ID): titik ribuan, koma desimal. */
   function parseAngkaDesimal(str) {
     if (str === null || str === undefined) return NaN;
     let s = String(str).trim().replace(/\s/g, "");
     if (!s) return NaN;
-    s = s.replace(/\./g, "");   // hapus ribuan
-    s = s.replace(/,/g, ".");   // desimal koma → titik
+    s = s.replace(/\./g, "");
+    s = s.replace(/,/g, ".");
     return parseFloat(s);
   }
 
@@ -215,11 +210,7 @@
     });
   }
 
-  /**
-   * Format preview input user: HANYA digit.
-   * Titik & koma ketikan user diabaikan.
-   * Titik ribuan disisipkan otomatis.
-   */
+  /** Format preview input user: hanya digit + titik ribuan. */
   function formatRibuan(str) {
     if (str === null || str === undefined) return "";
     const digits = String(str).replace(/\D/g, "");
@@ -394,6 +385,11 @@
   function toggleStopwatch() {
     if (state.running) {
       stopStopwatch();
+      return;
+    }
+    // Tidak jalan → mau mulai
+    if (state.durasiFinalMs > 0) {
+      bukaOverlayMulaiUlang();
     } else {
       startStopwatch();
     }
@@ -450,6 +446,29 @@
     if (!state.running) return;
     state.elapsedMs = Date.now() - state.startTime;
     el.stopwatchDisplay.textContent = formatDurasi(state.elapsedMs);
+  }
+
+  /* ================= OVERLAY MULAI ULANG ================= */
+  function bukaOverlayMulaiUlang() {
+    if (el.teksDurasiSebelumnya) {
+      el.teksDurasiSebelumnya.textContent = formatDurasi(state.durasiFinalMs);
+    }
+    el.overlayMulaiUlang.classList.add("active");
+  }
+
+  function tutupOverlayMulaiUlang() {
+    el.overlayMulaiUlang.classList.remove("active");
+  }
+
+  function konfirmasiMulaiUlang() {
+    // Reset durasi sebelumnya
+    state.durasiFinalMs = 0;
+    state.elapsedMs = 0;
+    el.stopwatchDisplay.textContent = formatDurasi(0);
+    el.warningDurasi.classList.add("hidden");
+
+    tutupOverlayMulaiUlang();
+    startStopwatch();
   }
 
   /* ================= HITUNG ================= */
@@ -549,6 +568,7 @@
     setOutput("—", "—", "—");
 
     tutupOverlayReset();
+    tutupOverlayMulaiUlang();
 
     beepReset();
     getar([40, 60, 40]);
@@ -611,6 +631,11 @@
     el.btnTutupReset.addEventListener("click", tutupOverlayReset);
     el.btnBatalReset.addEventListener("click", tutupOverlayReset);
     el.btnKonfirmasiReset.addEventListener("click", resetAll);
+
+    // Overlay mulai ulang
+    el.btnTutupMulaiUlang.addEventListener("click", tutupOverlayMulaiUlang);
+    el.btnBatalMulaiUlang.addEventListener("click", tutupOverlayMulaiUlang);
+    el.btnKonfirmasiMulaiUlang.addEventListener("click", konfirmasiMulaiUlang);
 
     window.addEventListener("touchmove", function () {}, { passive: true });
   }
