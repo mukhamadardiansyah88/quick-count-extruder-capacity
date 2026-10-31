@@ -1,8 +1,8 @@
 /* =========================================================
    app.js — Quick Count Extruder Capacity
    PT Mahkota Sukses Makmur
-   Input: hanya digit (titik & koma diabaikan).
-   Preview: thousand separator titik. Tanpa desimal.
+   Input user: hanya digit (titik & koma diabaikan).
+   Nilai SPK (tebal/lebar/lipat/bd): desimal koma didukung.
    ========================================================= */
 
 (function () {
@@ -181,17 +181,30 @@
   }
 
   /**
-   * Parse angka integer dari format id-ID:
-   * - Titik (ribuan) dihapus
-   * - Koma dihapus (jaga-jaga)
+   * Parse angka dari INPUT USER:
+   * - Hanya digit, titik & koma diabaikan.
+   * - Return integer.
    */
-  function parseAngka(str) {
+  function parseAngkaInput(str) {
     if (str === null || str === undefined) return NaN;
-    let s = String(str).trim().replace(/\s/g, "");
-    s = s.replace(/\./g, "");
-    s = s.replace(/,/g, "");
+    let s = String(str).replace(/\D/g, "");
     if (!s) return NaN;
     return parseInt(s, 10);
+  }
+
+  /**
+   * Parse angka DESIMAL dari DATABASE SPK (format id-ID):
+   * - Titik = ribuan (dihapus)
+   * - Koma = desimal (jadi titik)
+   * - Return float.
+   */
+  function parseAngkaDesimal(str) {
+    if (str === null || str === undefined) return NaN;
+    let s = String(str).trim().replace(/\s/g, "");
+    if (!s) return NaN;
+    s = s.replace(/\./g, "");   // hapus ribuan
+    s = s.replace(/,/g, ".");   // desimal koma → titik
+    return parseFloat(s);
   }
 
   function formatOutput(angka) {
@@ -203,8 +216,8 @@
   }
 
   /**
-   * Format preview input: HANYA digit.
-   * Titik & koma ketikan user diabaikan (seakan disabled).
+   * Format preview input user: HANYA digit.
+   * Titik & koma ketikan user diabaikan.
    * Titik ribuan disisipkan otomatis.
    */
   function formatRibuan(str) {
@@ -331,7 +344,7 @@
     const bd    = (spk.bd === undefined || spk.bd === null) ? "" : String(spk.bd);
     const jenis = (spk.jenis === undefined || spk.jenis === null) ? "—" : String(spk.jenis);
 
-    const lipatNum = parseAngka(lipat);
+    const lipatNum = parseAngkaDesimal(lipat);
     const adaLipat = lipat !== "" && isFinite(lipatNum) && lipatNum > 0;
 
     let dimensi;
@@ -442,10 +455,10 @@
   /* ================= HITUNG ================= */
   function hitungSemua() {
     const spk = state.spkAktif;
-    const panjangSPK = parseAngka(el.inputPanjangSPK.value);
-    const settingan = parseAngka(el.inputSettinganCounter.value);
-    const cAwal = parseAngka(el.inputCounterAwal.value);
-    const cAkhir = parseAngka(el.inputCounterAkhir.value);
+    const panjangSPK = parseAngkaInput(el.inputPanjangSPK.value);
+    const settingan = parseAngkaInput(el.inputSettinganCounter.value);
+    const cAwal = parseAngkaInput(el.inputCounterAwal.value);
+    const cAkhir = parseAngkaInput(el.inputCounterAkhir.value);
     const durasiMs = state.durasiFinalMs;
 
     setOutput("—", "—", "—");
@@ -463,9 +476,9 @@
       el.inputCounterAkhir.classList.remove("error");
     }
 
-    const tebal = parseAngka(spk.tebal);
-    const lebar = parseAngka(spk.lebar);
-    const bd = parseAngka(spk.bd);
+    const tebal = parseAngkaDesimal(spk.tebal);
+    const lebar = parseAngkaDesimal(spk.lebar);
+    const bd = parseAngkaDesimal(spk.bd);
 
     if (!isFinite(tebal) || !isFinite(lebar) || !isFinite(bd)) return;
 
