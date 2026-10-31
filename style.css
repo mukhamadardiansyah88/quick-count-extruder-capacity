@@ -99,7 +99,6 @@ body {
   text-transform: uppercase;
 }
 
-/* Kedua baris SAMA ukuran */
 .title-line1,
 .title-line2 {
   font-size: 30px;
@@ -160,7 +159,6 @@ body {
   display: none;
 }
 
-/* Judul panel: lebih besar & bold */
 .card-title {
   font-size: 17px;
   font-weight: 700;
@@ -383,7 +381,6 @@ body {
   width: 100%;
 }
 
-/* Tombol besar: Mulai/Stop/Reset All */
 .btn-big {
   font-size: 19px;
   font-weight: 700;
@@ -699,6 +696,16 @@ body {
   margin-bottom: 18px;
   text-align: center;
   letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+
+/* Durasi di overlay mulai ulang */
+.modal-text b {
+  color: var(--neon-green);
+  text-shadow: var(--glow-green);
+  font-size: 17px;
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
 }
 
 .modal-actions {
