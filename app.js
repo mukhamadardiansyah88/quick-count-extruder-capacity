@@ -202,6 +202,23 @@
     return parseFloat(s);
   }
 
+  /**
+   * Format tebal untuk TAMPILAN saja:
+   * - Titik desimal → koma (toleran database pakai titik)
+   * - "0,1" → "0,10", "0,2" → "0,20" (khusus)
+   * - Selain itu apa adanya (string asli, tidak dibulatkan)
+   * Kalkulasi tetap pakai parseAngkaDesimal.
+   */
+  function formatTebal(str) {
+    if (str === null || str === undefined) return "";
+    let s = String(str).trim();
+    if (!s) return "";
+    s = s.replace(/\./g, ",");
+    if (s === "0,1") return "0,10";
+    if (s === "0,2") return "0,20";
+    return s;
+  }
+
   function formatOutput(angka) {
     if (!isFinite(angka)) return "—";
     return angka.toLocaleString(CONFIG.LOCALE, {
@@ -338,11 +355,14 @@
     const lipatNum = parseAngkaDesimal(lipat);
     const adaLipat = lipat !== "" && isFinite(lipatNum) && lipatNum > 0;
 
+    // Format tebal untuk tampilan (khusus 0,1 → 0,10 & 0,2 → 0,20)
+    const tebalTampil = formatTebal(tebal);
+
     let dimensi;
     if (adaLipat) {
-      dimensi = escapeHtml(tebal) + " X " + escapeHtml(lebar) + "/" + escapeHtml(lipat);
+      dimensi = escapeHtml(tebalTampil) + " X " + escapeHtml(lebar) + "/" + escapeHtml(lipat);
     } else {
-      dimensi = escapeHtml(tebal) + " X " + escapeHtml(lebar);
+      dimensi = escapeHtml(tebalTampil) + " X " + escapeHtml(lebar);
     }
 
     const html =
@@ -461,7 +481,6 @@
   }
 
   function konfirmasiMulaiUlang() {
-    // Reset durasi sebelumnya
     state.durasiFinalMs = 0;
     state.elapsedMs = 0;
     el.stopwatchDisplay.textContent = formatDurasi(0);
@@ -632,7 +651,6 @@
     el.btnBatalReset.addEventListener("click", tutupOverlayReset);
     el.btnKonfirmasiReset.addEventListener("click", resetAll);
 
-    // Overlay mulai ulang
     el.btnTutupMulaiUlang.addEventListener("click", tutupOverlayMulaiUlang);
     el.btnBatalMulaiUlang.addEventListener("click", tutupOverlayMulaiUlang);
     el.btnKonfirmasiMulaiUlang.addEventListener("click", konfirmasiMulaiUlang);
