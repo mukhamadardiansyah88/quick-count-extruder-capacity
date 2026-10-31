@@ -1,6 +1,8 @@
 /* =========================================================
    app.js — Quick Count Extruder Capacity
    PT Mahkota Sukses Makmur
+   Input: hanya digit (titik & koma diabaikan).
+   Preview: thousand separator titik. Tanpa desimal.
    ========================================================= */
 
 (function () {
@@ -179,16 +181,17 @@
   }
 
   /**
-   * Parse angka dari format id-ID:
-   * - Titik = ribuan (dihapus)
-   * - Koma = desimal (jadi titik)
+   * Parse angka integer dari format id-ID:
+   * - Titik (ribuan) dihapus
+   * - Koma dihapus (jaga-jaga)
    */
   function parseAngka(str) {
     if (str === null || str === undefined) return NaN;
     let s = String(str).trim().replace(/\s/g, "");
-    s = s.replace(/\./g, "");   // hapus ribuan
-    s = s.replace(/,/g, ".");   // desimal koma → titik
-    return parseFloat(s);
+    s = s.replace(/\./g, "");
+    s = s.replace(/,/g, "");
+    if (!s) return NaN;
+    return parseInt(s, 10);
   }
 
   function formatOutput(angka) {
@@ -200,45 +203,15 @@
   }
 
   /**
-   * Format angka untuk preview input:
-   * - Titik ribuan (sisipan otomatis) dihapus dulu lewat pola \d\.\d{3}\b
-   * - Titik sisa = ketikan user → dianggap koma (desimal)
-   * - Koma = desimal
-   * - Format ulang: ribuan pakai titik, desimal pakai koma
+   * Format preview input: HANYA digit.
+   * Titik & koma ketikan user diabaikan (seakan disabled).
+   * Titik ribuan disisipkan otomatis.
    */
   function formatRibuan(str) {
     if (str === null || str === undefined) return "";
-    let raw = String(str).trim();
-    if (!raw) return "";
-
-    // 1. Hapus titik ribuan sisipan otomatis (pola 1.200 / 1.234.567)
-    raw = raw.replace(/(\d)\.(?=\d{3}\b)/g, "$1");
-
-    // 2. Titik sisa = ketikan user (dianggap desimal) → ubah jadi koma
-    raw = raw.replace(/\./g, ",");
-
-    // 3. Pisahkan integer & desimal berdasarkan koma pertama
-    const komaIdx = raw.indexOf(",");
-    let intPart, decPart;
-    if (komaIdx >= 0) {
-      intPart = raw.slice(0, komaIdx).replace(/\D/g, "");
-      decPart = raw.slice(komaIdx + 1).replace(/\D/g, "");
-    } else {
-      intPart = raw.replace(/\D/g, "");
-      decPart = undefined;
-    }
-
-    if (!intPart && decPart === undefined) return "";
-
-    // 4. Format ribuan
-    let intFormatted = intPart
-      ? intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-      : "0";
-
-    if (decPart !== undefined && decPart !== "") {
-      return intFormatted + "," + decPart;
-    }
-    return intFormatted;
+    const digits = String(str).replace(/\D/g, "");
+    if (!digits) return "";
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   }
 
   function pasangFormatterRibuan(input) {
